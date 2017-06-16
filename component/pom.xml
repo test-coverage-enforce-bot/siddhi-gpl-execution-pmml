@@ -20,14 +20,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.wso2.extension.siddhi.execution.pmml</groupId>
-        <artifactId>siddhi-execution-pmml-parent</artifactId>
+        <groupId>org.wso2.extension.siddhi.gpl.execution.pmml</groupId>
+        <artifactId>siddhi-gpl-execution-pmml-parent</artifactId>
         <version>4.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>siddhi-gpl-execution-pmml</artifactId>
-    <name>Siddhi Execution PMML Extension</name>
+    <name>Siddhi gpl execution pmml Extension</name>
     <url>https://github.com/wso2-extensions/siddhi-gpl-execution-pmml</url>
     <packaging>bundle</packaging>
 

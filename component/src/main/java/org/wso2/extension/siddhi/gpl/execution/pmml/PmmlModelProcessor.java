@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.siddhi.extension.execution.pmml;
+package org.wso2.extension.siddhi.gpl.execution.pmml;
 
 import org.apache.log4j.Logger;
 import org.dmg.pmml.FieldName;
@@ -68,7 +68,7 @@ import javax.xml.transform.Source;
 
 
 /**
- * Class implementing PmmlModelProcessor.
+ * Class implementing Pmml Model Processor.
  */
 @Extension(
         name = "predict",
@@ -94,8 +94,9 @@ import javax.xml.transform.Source;
         },
         returnAttributes = {
             @ReturnAttribute(
-                    name = "test",
-                    description = " had",
+                    name = "output",
+                    description = "All the processed outputs defined in the query. The number of outputs can " +
+                            "vary depending on the query definition.",
                     type = {DataType.OBJECT}
             )
         },
@@ -130,7 +131,7 @@ public class PmmlModelProcessor extends StreamProcessor {
                            StreamEventCloner streamEventCloner, ComplexEventPopulater complexEventPopulater) {
 
         StreamEvent event = streamEventChunk.getFirst();
-        Map<FieldName, FieldValue> inData = new HashMap<FieldName, FieldValue>();
+        Map<FieldName, FieldValue> inData = new HashMap<>();
 
         for (Map.Entry<FieldName, int[]> entry : attributeIndexMap.entrySet()) {
             FieldName featureName = entry.getKey();
@@ -214,7 +215,7 @@ public class PmmlModelProcessor extends StreamProcessor {
      */
     private List<Attribute> generateOutputAttributes() {
 
-        List<Attribute> outputAttributes = new ArrayList<Attribute>();
+        List<Attribute> outputAttributes = new ArrayList<>();
         int numOfOutputFields = evaluator.getOutputFields().size();
         for (FieldName field : outputFields) {
             String dataType;

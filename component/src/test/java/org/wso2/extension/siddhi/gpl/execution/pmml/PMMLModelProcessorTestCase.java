@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.siddhi.extension.execution.pmml;
+package org.wso2.extension.siddhi.gpl.execution.pmml;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
