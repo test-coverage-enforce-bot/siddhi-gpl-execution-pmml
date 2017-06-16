@@ -1,0 +1,9 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="MonogStoreTestSuite" verbose="1">
+    <test name="MonogStoreTest">
+        <classes>
+             <class name="org.wso2.siddhi.extension.execution.pmml.PMMLModelProcessorTestCase" />
+        </classes>
+    </test>
+</suite>

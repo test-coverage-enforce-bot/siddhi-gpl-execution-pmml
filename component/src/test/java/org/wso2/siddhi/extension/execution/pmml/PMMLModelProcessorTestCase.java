@@ -16,11 +16,12 @@
  * under the License.
  */
 
-package org.wso2.extension.siddhi.execution.pmml;
+package org.wso2.siddhi.extension.execution.pmml;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.wso2.siddhi.core.ExecutionPlanRuntime;
+import org.testng.Assert;
+import org.testng.annotations.BeforeTest;
+import org.testng.annotations.Test;
+import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
 import org.wso2.siddhi.core.event.Event;
 import org.wso2.siddhi.core.query.output.callback.QueryCallback;
@@ -31,12 +32,16 @@ import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+
+/**
+ * Test class for PmmlModelProcessor.
+ */
 public class PMMLModelProcessorTestCase {
 
     private volatile boolean eventArrived;
     private volatile boolean isSuccessfullyExecuted;
 
-    @Before
+    @BeforeTest
     public void init() {
         eventArrived = false;
         isSuccessfullyExecuted = false;
@@ -51,16 +56,18 @@ public class PMMLModelProcessorTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inputStream = "define stream InputStream " +
-                "(root_shell double, su_attempted double, num_root double, num_file_creations double, num_shells double, num_access_files double, num_outbound_cmds double, is_host_login double, is_guest_login double, count double, srv_count double, serror_rate double, srv_serror_rate double);";
+                "(root_shell double, su_attempted double, num_root double, num_file_creations double, num_shells " +
+                "double, num_access_files double, num_outbound_cmds double, is_host_login double, is_guest_login " +
+                "double, count double, srv_count double, serror_rate double, srv_serror_rate double);";
 
         String query = "@info(name = 'query1') " +
-                "from InputStream#pmml:predict('"+ pmmlFile +"') " +
+                "from InputStream#pmml:predict('" + pmmlFile + "') " +
                 "select * " +
                 "insert into outputStream ;";
 
-        ExecutionPlanRuntime executionPlanRuntime = siddhiManager.createExecutionPlanRuntime(inputStream + query);
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inputStream + query);
 
-        executionPlanRuntime.addCallback("query1", new QueryCallback() {
+        siddhiAppRuntime.addCallback("query1", new QueryCallback() {
             @Override
             public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
                 EventPrinter.print(timeStamp, inEvents, removeEvents);
@@ -72,13 +79,13 @@ public class PMMLModelProcessorTestCase {
 
         });
 
-        InputHandler inputHandler = executionPlanRuntime.getInputHandler("InputStream");
-        executionPlanRuntime.start();
+        InputHandler inputHandler = siddhiAppRuntime.getInputHandler("InputStream");
+        siddhiAppRuntime.start();
         inputHandler.send(new Object[]{6, 148, 72, 35, 0, 33.6, 0.627, 50, 1, 2, 3, 4, 5});
         Thread.sleep(1000);
-        junit.framework.Assert.assertTrue(isSuccessfullyExecuted);
-        junit.framework.Assert.assertTrue(eventArrived);
-        executionPlanRuntime.shutdown();
+        Assert.assertTrue(isSuccessfullyExecuted);
+        Assert.assertTrue(eventArrived);
+        siddhiAppRuntime.shutdown();
     }
 
     @Test
@@ -90,16 +97,20 @@ public class PMMLModelProcessorTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inputStream = "define stream InputStream " +
-                "(root_shell double, su_attempted double, num_root double, num_file_creations double, num_shells double, num_access_files double, num_outbound_cmds double, is_host_login double, is_guest_login double, count double, srv_count double, serror_rate double, srv_serror_rate double);";
+                "(root_shell double, su_attempted double, num_root double, num_file_creations double, num_shells " +
+                "double, num_access_files double, num_outbound_cmds double, is_host_login double, is_guest_login " +
+                "double, count double, srv_count double, serror_rate double, srv_serror_rate double);";
 
         String query = "@info(name = 'query1') " +
-                "from InputStream#pmml:predict('" + pmmlFile + "', root_shell, su_attempted, num_root, num_file_creations, num_shells, num_access_files, num_outbound_cmds, is_host_login, is_guest_login, count, srv_count, serror_rate, srv_serror_rate) " +
+                "from InputStream#pmml:predict('" + pmmlFile + "', root_shell, su_attempted, num_root, " +
+                "num_file_creations, num_shells, num_access_files, num_outbound_cmds, is_host_login, is_guest_login, " +
+                "count, srv_count, serror_rate, srv_serror_rate) " +
                 "select Predicted_response " +
                 "insert into outputStream ;";
 
-        ExecutionPlanRuntime executionPlanRuntime = siddhiManager.createExecutionPlanRuntime(inputStream + query);
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inputStream + query);
 
-        executionPlanRuntime.addCallback("query1", new QueryCallback() {
+        siddhiAppRuntime.addCallback("query1", new QueryCallback() {
             @Override
             public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
                 EventPrinter.print(timeStamp, inEvents, removeEvents);
@@ -111,13 +122,13 @@ public class PMMLModelProcessorTestCase {
 
         });
 
-        InputHandler inputHandler = executionPlanRuntime.getInputHandler("InputStream");
-        executionPlanRuntime.start();
+        InputHandler inputHandler = siddhiAppRuntime.getInputHandler("InputStream");
+        siddhiAppRuntime.start();
         inputHandler.send(new Object[]{6, 148, 72, 35, 0, 33.6, 0.627, 50, 1, 2, 3, 4, 5});
         Thread.sleep(1000);
-        junit.framework.Assert.assertTrue(isSuccessfullyExecuted);
-        junit.framework.Assert.assertTrue(eventArrived);
-        executionPlanRuntime.shutdown();
+        Assert.assertTrue(isSuccessfullyExecuted);
+        Assert.assertTrue(eventArrived);
+        siddhiAppRuntime.shutdown();
     }
 
     @Test
@@ -129,16 +140,20 @@ public class PMMLModelProcessorTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inputStream = "define stream InputStream " +
-                "(root_shell double, su_attempted double, num_root double, num_file_creations double, num_shells double, num_access_files double, num_outbound_cmds double, is_host_login double, is_guest_login double, count double, srv_count double, serror_rate double, srv_serror_rate double);";
+                "(root_shell double, su_attempted double, num_root double, num_file_creations double, num_shells " +
+                "double, num_access_files double, num_outbound_cmds double, is_host_login double, is_guest_login " +
+                "double, count double, srv_count double, serror_rate double, srv_serror_rate double);";
 
         String query = "@info(name = 'query1') " +
-                "from InputStream#pmml:predict('" + pmmlFile + "', root_shell, su_attempted, num_root, num_file_creations, num_shells, num_access_files, num_outbound_cmds, is_host_login, is_guest_login, count, srv_count, serror_rate, srv_serror_rate) " +
+                "from InputStream#pmml:predict('" + pmmlFile + "', root_shell, su_attempted, num_root, " +
+                "num_file_creations, num_shells, num_access_files, num_outbound_cmds, is_host_login, " +
+                "is_guest_login, count, srv_count, serror_rate, srv_serror_rate) " +
                 "select * " +
                 "insert into outputStream ;";
 
-        ExecutionPlanRuntime executionPlanRuntime = siddhiManager.createExecutionPlanRuntime(inputStream + query);
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inputStream + query);
 
-        executionPlanRuntime.addCallback("query1", new QueryCallback() {
+        siddhiAppRuntime.addCallback("query1", new QueryCallback() {
             @Override
             public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
                 EventPrinter.print(timeStamp, inEvents, removeEvents);
@@ -150,36 +165,40 @@ public class PMMLModelProcessorTestCase {
 
         });
 
-        InputHandler inputHandler = executionPlanRuntime.getInputHandler("InputStream");
-        executionPlanRuntime.start();
+        InputHandler inputHandler = siddhiAppRuntime.getInputHandler("InputStream");
+        siddhiAppRuntime.start();
         inputHandler.send(new Object[]{6, 148, 72, 35, 0, 33.6, 0.627, 50, 1, 2, 3, 4, 5});
         Thread.sleep(1000);
-        junit.framework.Assert.assertTrue(isSuccessfullyExecuted);
-        junit.framework.Assert.assertTrue(eventArrived);
-        executionPlanRuntime.shutdown();
+        Assert.assertTrue(isSuccessfullyExecuted);
+        Assert.assertTrue(eventArrived);
+        siddhiAppRuntime.shutdown();
     }
 
     @Test
-    public void PredictFunctionWithMissingDataTypeAttributeTest() throws URISyntaxException, InterruptedException {
+    public void predictFunctionWithMissingDataTypeAttributeTest() throws URISyntaxException, InterruptedException {
         URL resource = PMMLModelProcessorTestCase.class.getResource("/decision-tree-modified.pmml");
         String pmmlFile = new File(resource.toURI()).getAbsolutePath();
 
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inputStream = "define stream InputStream "
-                + "(root_shell double, su_attempted double, num_root double, num_file_creations double, num_shells double, num_access_files double, num_outbound_cmds double, is_host_login double, is_guest_login double, count double, srv_count double, serror_rate double, srv_serror_rate double);";
+                + "(root_shell double, su_attempted double, num_root double, num_file_creations double, " +
+                "num_shells double, num_access_files double, num_outbound_cmds double, is_host_login double, " +
+                "is_guest_login double, count double, srv_count double, serror_rate double, srv_serror_rate double);";
 
         String query = "@info(name = 'query1') " +
                 "from InputStream#pmml:predict('" + pmmlFile
-                + "', root_shell, su_attempted, num_root, num_file_creations, num_shells, num_access_files, num_outbound_cmds, is_host_login, is_guest_login, count, srv_count, serror_rate, srv_serror_rate) "
+                + "', root_shell, su_attempted, num_root, num_file_creations, num_shells, num_access_files, " +
+                "num_outbound_cmds, is_host_login, is_guest_login, count, srv_count, serror_rate, srv_serror_rate) "
                 +
                 "select * " +
                 "insert into outputStream ;";
 
-        ExecutionPlanRuntime executionPlanRuntime = siddhiManager.createExecutionPlanRuntime(inputStream + query);
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inputStream + query);
 
-        executionPlanRuntime.addCallback("query1", new QueryCallback() {
-            @Override public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+        siddhiAppRuntime.addCallback("query1", new QueryCallback() {
+            @Override
+            public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
                 EventPrinter.print(timeStamp, inEvents, removeEvents);
                 eventArrived = true;
                 if (inEvents != null) {
@@ -189,24 +208,25 @@ public class PMMLModelProcessorTestCase {
 
         });
 
-        InputHandler inputHandler = executionPlanRuntime.getInputHandler("InputStream");
-        executionPlanRuntime.start();
-        inputHandler.send(new Object[] { 6, 148, 72, 35, 0, 33.6, 0.627, 50, 1, 2, 3, 4, 5 });
+        InputHandler inputHandler = siddhiAppRuntime.getInputHandler("InputStream");
+        siddhiAppRuntime.start();
+        inputHandler.send(new Object[]{6, 148, 72, 35, 0, 33.6, 0.627, 50, 1, 2, 3, 4, 5});
         Thread.sleep(1000);
-        junit.framework.Assert.assertTrue(isSuccessfullyExecuted);
-        junit.framework.Assert.assertTrue(eventArrived);
-        executionPlanRuntime.shutdown();
+        Assert.assertTrue(isSuccessfullyExecuted);
+        Assert.assertTrue(eventArrived);
+        siddhiAppRuntime.shutdown();
     }
 
     @Test
-    public void PredictFunctionWithMissingOutputTagTest() throws URISyntaxException, InterruptedException{
+    public void predictFunctionWithMissingOutputTagTest() throws URISyntaxException, InterruptedException {
         URL resource = PMMLModelProcessorTestCase.class.getResource("/linear-regression.pmml");
         String pmmlFile = new File(resource.toURI()).getAbsolutePath();
 
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inputStream = "define stream InputStream "
-                + "(field_0 double, field_1 double, field_2 double, field_3 double, field_4 double, field_5 double, field_6 double, field_7 double);";
+                + "(field_0 double, field_1 double, field_2 double, field_3 double, field_4 double, field_5 double, " +
+                "field_6 double, field_7 double);";
 
         String query = "@info(name = 'query1') " +
                 "from InputStream#pmml:predict('" + pmmlFile
@@ -214,10 +234,11 @@ public class PMMLModelProcessorTestCase {
                 "select * " +
                 "insert into outputStream ;";
 
-        ExecutionPlanRuntime executionPlanRuntime = siddhiManager.createExecutionPlanRuntime(inputStream + query);
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inputStream + query);
 
-        executionPlanRuntime.addCallback("query1", new QueryCallback() {
-            @Override public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+        siddhiAppRuntime.addCallback("query1", new QueryCallback() {
+            @Override
+            public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
                 EventPrinter.print(timeStamp, inEvents, removeEvents);
                 eventArrived = true;
                 if (inEvents != null) {
@@ -227,12 +248,12 @@ public class PMMLModelProcessorTestCase {
 
         });
 
-        InputHandler inputHandler = executionPlanRuntime.getInputHandler("InputStream");
-        executionPlanRuntime.start();
-        inputHandler.send(new Object[] { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0 });
+        InputHandler inputHandler = siddhiAppRuntime.getInputHandler("InputStream");
+        siddhiAppRuntime.start();
+        inputHandler.send(new Object[]{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0});
         Thread.sleep(1000);
-        junit.framework.Assert.assertTrue(isSuccessfullyExecuted);
-        junit.framework.Assert.assertTrue(eventArrived);
-        executionPlanRuntime.shutdown();
+        Assert.assertTrue(isSuccessfullyExecuted);
+        Assert.assertTrue(eventArrived);
+        siddhiAppRuntime.shutdown();
     }
 }
