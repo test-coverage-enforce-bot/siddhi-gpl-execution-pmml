@@ -16,59 +16,122 @@
  * under the License.
  */
 
-package org.wso2.extension.siddhi.execution.pmml;
+package org.wso2.extension.siddhi.gpl.execution.pmml;
 
+import org.apache.log4j.Logger;
+import org.dmg.pmml.FieldName;
+import org.dmg.pmml.Model;
+import org.dmg.pmml.PMML;
+import org.jpmml.evaluator.Evaluator;
 import org.jpmml.evaluator.EvaluatorUtil;
 import org.jpmml.evaluator.FieldValue;
-import org.wso2.siddhi.core.config.ExecutionPlanContext;
+import org.jpmml.evaluator.ModelEvaluatorFactory;
+import org.jpmml.manager.ModelManager;
+import org.jpmml.manager.PMMLManager;
+import org.jpmml.model.ImportFilter;
+import org.jpmml.model.JAXBUtil;
+import org.wso2.siddhi.annotation.Example;
+import org.wso2.siddhi.annotation.Extension;
+import org.wso2.siddhi.annotation.Parameter;
+import org.wso2.siddhi.annotation.ReturnAttribute;
+import org.wso2.siddhi.annotation.util.DataType;
+import org.wso2.siddhi.core.config.SiddhiAppContext;
 import org.wso2.siddhi.core.event.ComplexEventChunk;
 import org.wso2.siddhi.core.event.stream.StreamEvent;
 import org.wso2.siddhi.core.event.stream.StreamEventCloner;
 import org.wso2.siddhi.core.event.stream.populater.ComplexEventPopulater;
-import org.wso2.siddhi.core.exception.ExecutionPlanCreationException;
-import org.wso2.siddhi.core.exception.ExecutionPlanRuntimeException;
+import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
+import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
 import org.wso2.siddhi.core.executor.ConstantExpressionExecutor;
 import org.wso2.siddhi.core.executor.ExpressionExecutor;
 import org.wso2.siddhi.core.executor.VariableExpressionExecutor;
 import org.wso2.siddhi.core.query.processor.Processor;
 import org.wso2.siddhi.core.query.processor.stream.StreamProcessor;
+import org.wso2.siddhi.core.util.config.ConfigReader;
 import org.wso2.siddhi.query.api.definition.AbstractDefinition;
 import org.wso2.siddhi.query.api.definition.Attribute;
-import org.wso2.siddhi.query.api.exception.ExecutionPlanValidationException;
+import org.wso2.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.xml.sax.InputSource;
-
-import org.apache.log4j.Logger;
-import org.dmg.pmml.FieldName;
-import org.dmg.pmml.PMML;
-import org.jpmml.evaluator.Evaluator;
-import org.jpmml.evaluator.ModelEvaluatorFactory;
-import org.jpmml.manager.PMMLManager;
-import org.jpmml.model.ImportFilter;
-import org.jpmml.model.JAXBUtil;
+import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.StringReader;
-import java.util.*;
-
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.xml.bind.JAXBException;
 import javax.xml.transform.Source;
 
+
+
+/**
+ * Class implementing Pmml Model Processor.
+ */
+@Extension(
+        name = "predict",
+        namespace = "pmml",
+        description = "Processes the input stream attributes according to the defined PMML standard model and " +
+                "outputs the processed results together with the input stream attributes.",
+        parameters = {
+                @Parameter(
+                        name = "path.to.pmml.file",
+                        description = "The path to the PMML model file.\n",
+                        type = {DataType.STRING}
+                ),
+                @Parameter(
+                        name = "input",
+                        description = "An attribute of the input stream that is sent to the PMML standard model " +
+                                "as a value to based on which the prediction is made. The predict function does " +
+                                "not accept any constant values as input parameters. You can have multiple input " +
+                                "parameters according to the input stream definition.",
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "Empty Array"
+                )
+        },
+        returnAttributes = {
+            @ReturnAttribute(
+                    name = "output",
+                    description = "All the processed outputs defined in the query. The number of outputs can " +
+                            "vary depending on the query definition.",
+                    type = {DataType.OBJECT}
+            )
+        },
+        examples = {
+                @Example(
+                        syntax = "predict('<CEP HOME>/samples/artifacts/0301/decision-tree.pmml', root_shell, " +
+                                "su_attempted, num_root, num_file_creations, num_shells, num_access_files, " +
+                                "num_outbound_cmds, is_host_login, is_guest_login , count, srv_count, serror_rate, " +
+                                "srv_serror_rate)",
+                        description = "This model is implemented to detect network intruders. The input event " +
+                                "stream is processed by the execution plan that uses the pmml predictive model " +
+                                "to detect whether a particular user is an intruder to the network or not. The " +
+                                "output stream contains the processed query results that include the predicted " +
+                                "responses."
+                )
+        }
+)
 public class PmmlModelProcessor extends StreamProcessor {
 
-    private static Logger logger = Logger.getLogger(PmmlModelProcessor.class);
+    private static final Logger logger = Logger.getLogger(PmmlModelProcessor.class);
+
     private String pmmlDefinition;
     private boolean attributeSelectionAvailable;
-    private Map<FieldName, int[]> attributeIndexMap;           // <feature-name, [event-array-type][attribute-index]> pairs
-    
+    private Map<FieldName, int[]> attributeIndexMap; // <feature-name, [event-array-type][attribute-index]> pairs
+
     private List<FieldName> inputFields;        // All the input fields defined in the pmml definition
     private List<FieldName> outputFields;       // Output fields of the pmml definition
     private Evaluator evaluator;
 
     @Override
-    protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor, StreamEventCloner streamEventCloner, ComplexEventPopulater complexEventPopulater) {
+    protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
+                           StreamEventCloner streamEventCloner, ComplexEventPopulater complexEventPopulater) {
 
         StreamEvent event = streamEventChunk.getFirst();
-        Map<FieldName, FieldValue> inData = new HashMap<FieldName, FieldValue>();
+        Map<FieldName, FieldValue> inData = new HashMap<>();
 
         for (Map.Entry<FieldName, int[]> entry : attributeIndexMap.entrySet()) {
             FieldName featureName = entry.getKey();
@@ -81,6 +144,8 @@ public class PmmlModelProcessor extends StreamProcessor {
                 case 2:
                     dataValue = event.getOutputData()[attributeIndexArray[3]];
                     break;
+                default:
+                    break;
             }
             inData.put(featureName, EvaluatorUtil.prepare(evaluator, featureName, String.valueOf(dataValue)));
         }
@@ -90,44 +155,48 @@ public class PmmlModelProcessor extends StreamProcessor {
                 Map<FieldName, ?> result = evaluator.evaluate(inData);
                 Object[] output = new Object[result.size()];
                 int i = 0;
-                for (FieldName fieldName : result.keySet()) {
-                    output[i] = EvaluatorUtil.decode(result.get(fieldName));
+                for (Map.Entry<FieldName, ?> fieldName : result.entrySet()) {
+                    output[i] = EvaluatorUtil.decode(fieldName.getValue());
                     i++;
                 }
                 complexEventPopulater.populateComplexEvent(event, output);
                 nextProcessor.process(streamEventChunk);
             } catch (Exception e) {
-                log.error("Error while predicting", e);
-                throw new ExecutionPlanRuntimeException("Error while predicting", e);
+                logger.error("Error while predicting", e);
+                throw new SiddhiAppRuntimeException("Error while predicting", e);
             }
         }
     }
 
     @Override
-    protected List<Attribute> init(AbstractDefinition inputDefinition, ExpressionExecutor[] attributeExpressionExecutors, ExecutionPlanContext executionPlanContext) {
-
-        if(attributeExpressionExecutors.length == 0) {
-            throw new ExecutionPlanValidationException("PMML model definition not available.");
-        } else if(attributeExpressionExecutors.length == 1) {
-            attributeSelectionAvailable = false;    // model-definition only
+    protected List<Attribute> init(AbstractDefinition abstractDefinition,
+                                   ExpressionExecutor[] expressionExecutors,
+                                   ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
+        if (attributeExpressionExecutors.length == 0) {
+            throw new SiddhiAppValidationException("PMML model definition not available.");
         } else {
-            attributeSelectionAvailable = true;     // model-definition and stream-attributes list
+            attributeSelectionAvailable = attributeExpressionExecutors.length != 1;
         }
 
         // Check whether the first parameter in the expression is the pmml definition
-        if(attributeExpressionExecutors[0] instanceof ConstantExpressionExecutor)  {
+        if (attributeExpressionExecutors[0] instanceof ConstantExpressionExecutor) {
             Object constantObj = ((ConstantExpressionExecutor) attributeExpressionExecutors[0]).getValue();
             pmmlDefinition = (String) constantObj;
         } else {
-            throw new ExecutionPlanValidationException("PMML model definition has not been set as the first parameter");
+            throw new SiddhiAppValidationException("PMML model definition has not been set as the first parameter");
         }
-        
+
         // Unmarshal the definition and get an executable pmml model
         PMML pmmlModel = unmarshal(pmmlDefinition);
         // Get the different types of fields defined in the pmml model
         PMMLManager pmmlManager = new PMMLManager(pmmlModel);
-        
-        evaluator = (Evaluator) pmmlManager.getModelManager(ModelEvaluatorFactory.getInstance());
+
+        ModelManager<? extends Model> modelManager = pmmlManager.getModelManager(ModelEvaluatorFactory.getInstance());
+        if (modelManager instanceof Evaluator) {
+            evaluator = (Evaluator) modelManager;
+        } else {
+            throw new SiddhiAppCreationException("Error in casting pmml model : '" + modelManager + "'");
+        }
         inputFields = evaluator.getActiveFields();
         if (evaluator.getOutputFields().size() == 0) {
             outputFields = evaluator.getTargetFields();
@@ -138,13 +207,15 @@ public class PmmlModelProcessor extends StreamProcessor {
         return generateOutputAttributes();
     }
 
+
     /**
-     * Generate the output attribute list
-     * @return
+     * Generate the output attribute list.
+     *
+     * @return List
      */
     private List<Attribute> generateOutputAttributes() {
 
-        List<Attribute> outputAttributes = new ArrayList<Attribute>();
+        List<Attribute> outputAttributes = new ArrayList<>();
         int numOfOutputFields = evaluator.getOutputFields().size();
         for (FieldName field : outputFields) {
             String dataType;
@@ -153,7 +224,7 @@ public class PmmlModelProcessor extends StreamProcessor {
             } else {
                 // If dataType attribute is missing, consider dataType as string(temporary fix).
                 if (evaluator.getOutputField(field).getDataType() == null) {
-                    log.info("Attribute dataType missing for OutputField. Using String as dataType");
+                    logger.info("Attribute dataType missing for OutputField. Using String as dataType");
                     dataType = "string";
                 } else {
                     dataType = evaluator.getOutputField(field).getDataType().toString();
@@ -183,49 +254,49 @@ public class PmmlModelProcessor extends StreamProcessor {
         try {
             populateFeatureAttributeMapping();
         } catch (Exception e) {
-            log.error("Error while mapping attributes with pmml model features : " + pmmlDefinition, e);
-            throw new ExecutionPlanCreationException("Error while mapping attributes with pmml model features : " + pmmlDefinition + "\n" + e.getMessage());
+            logger.error("Error while mapping attributes with pmml model features : " + pmmlDefinition, e);
+            throw new SiddhiAppCreationException("Error while mapping attributes with pmml model features : " +
+                    pmmlDefinition + "\n" + e.getMessage());
         }
     }
 
     /**
-     * Match the attribute index values of stream with feature names of the model
-     * @throws Exception
+     * Match the attribute index values of stream with feature names of the model.
+     *
+     * @throws Exception ExceutionPlanCreationException
      */
     private void populateFeatureAttributeMapping() throws Exception {
 
-        attributeIndexMap = new HashMap<FieldName, int[]>();
-        HashMap<String, FieldName> features = new HashMap<String, FieldName>();
+        attributeIndexMap = new HashMap<>();
+        HashMap<String, FieldName> features = new HashMap<>();
 
         for (FieldName fieldName : inputFields) {
             features.put(fieldName.getValue(), fieldName);
         }
 
-        if(attributeSelectionAvailable) {
-            int index = 0;
+        if (attributeSelectionAvailable) {
             for (ExpressionExecutor expressionExecutor : attributeExpressionExecutors) {
-                if(expressionExecutor instanceof VariableExpressionExecutor) {
+                if (expressionExecutor instanceof VariableExpressionExecutor) {
                     VariableExpressionExecutor variable = (VariableExpressionExecutor) expressionExecutor;
                     String variableName = variable.getAttribute().getName();
                     if (features.get(variableName) != null) {
                         attributeIndexMap.put(features.get(variableName), variable.getPosition());
                     } else {
-                        throw new ExecutionPlanCreationException("No matching feature name found in the model " +
+                        throw new SiddhiAppCreationException("No matching feature name found in the model " +
                                 "for the attribute : " + variableName);
                     }
-                    index++;
                 }
             }
         } else {
             String[] attributeNames = inputDefinition.getAttributeNameArray();
-            for(String attributeName : attributeNames) {
+            for (String attributeName : attributeNames) {
                 if (features.get(attributeName) != null) {
                     int[] attributeIndexArray = new int[4];
                     attributeIndexArray[2] = 2; // get values from output data
                     attributeIndexArray[3] = inputDefinition.getAttributePosition(attributeName);
                     attributeIndexMap.put(features.get(attributeName), attributeIndexArray);
                 } else {
-                    throw new ExecutionPlanCreationException("No matching feature name found in the model " +
+                    throw new SiddhiAppCreationException("No matching feature name found in the model " +
                             "for the attribute : " + attributeName);
                 }
             }
@@ -235,10 +306,11 @@ public class PmmlModelProcessor extends StreamProcessor {
     /**
      * TODO : move to a Util class (PmmlUtil)
      * Unmarshal the definition and get an executable pmml model.
-     * 
-     * @return  pmml model
+     *
+     * @return pmml model
      */
     private PMML unmarshal(String pmmlDefinition) {
+
         try {
             File pmmlFile = new File(pmmlDefinition);
             InputSource pmmlSource;
@@ -252,25 +324,24 @@ public class PmmlModelProcessor extends StreamProcessor {
             }
             source = ImportFilter.apply(pmmlSource);
             return JAXBUtil.unmarshalPMML(source);
-        } catch (Exception e) {
+        } catch (SAXException | JAXBException | FileNotFoundException e) {
             logger.error("Failed to unmarshal the pmml definition: " + e.getMessage());
-            throw new ExecutionPlanCreationException("Failed to unmarshal the pmml definition: " + pmmlDefinition + ". "
+            throw new SiddhiAppCreationException("Failed to unmarshal the pmml definition: " + pmmlDefinition + ". "
                     + e.getMessage(), e);
         }
     }
-    
+
     @Override
     public void stop() {
-
     }
 
     @Override
-    public Object[] currentState() {
-        return new Object[0];
+    public Map<String, Object> currentState() {
+        return new HashMap<>();
     }
 
     @Override
-    public void restoreState(Object[] state) {
+    public void restoreState(Map<String, Object> map) {
 
     }
 }
