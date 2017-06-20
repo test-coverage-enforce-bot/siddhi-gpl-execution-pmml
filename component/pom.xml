@@ -89,7 +89,7 @@
                         <Export-Package>
                             !org.jpmml.*,
                             !org.dmg.pmml.*,
-                            org.wso2.extension.siddhi.execution.pmml.*
+                            org.wso2.extension.siddhi.gpl.execution.pmml.*
                         </Export-Package>
                         <Import-Package>
                             org.jpmml.evaluator.*; version="${pmml.evaluator.version}",
