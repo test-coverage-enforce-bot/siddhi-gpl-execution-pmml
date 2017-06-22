@@ -84,7 +84,6 @@
                         <Private-Package>
                             org.jpmml.*,
                             org.dmg.pmml.*,
-                            ],
                             com.google.common.*,
                             org.joda.time.*
                         </Private-Package>
