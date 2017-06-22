@@ -84,7 +84,8 @@
                         <Private-Package>
                             org.jpmml.*,
                             org.dmg.pmml.*,
-                            ]
+                            com.google.common.*,
+                            org.joda.time.*
                         </Private-Package>
                         <Export-Package>
                             !org.jpmml.*,
@@ -98,6 +99,9 @@
                             org.jpmml.schema.*; version="${pmml.evaluator.version}",
                             *;resolution:=optional
                         </Import-Package>
+                        <Include-Resource>
+                            META-INF=target/classes/META-INF
+                        </Include-Resource>
                     </instructions>
                 </configuration>
             </plugin>
