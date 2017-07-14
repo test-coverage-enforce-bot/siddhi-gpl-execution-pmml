@@ -8,7 +8,7 @@ extra:
     accent: teal
 pages:
 - Welcome to WSO2 Siddhi GPL Execution PMML: index.md
-- Api:
+- API Docs:
   - 4.0.2-SNAPSHOT: api/4.0.2-SNAPSHOT.md
 - About:
   - License: about/license.md
