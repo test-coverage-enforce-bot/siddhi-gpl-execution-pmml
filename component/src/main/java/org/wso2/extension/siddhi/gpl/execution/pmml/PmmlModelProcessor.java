@@ -102,7 +102,7 @@ import javax.xml.transform.Source;
         },
         examples = {
                 @Example(
-                        syntax = "predict('<CEP HOME>/samples/artifacts/0301/decision-tree.pmml', root_shell, " +
+                        syntax = "predict('<SP HOME>/samples/artifacts/0301/decision-tree.pmml', root_shell, " +
                                 "su_attempted, num_root, num_file_creations, num_shells, num_access_files, " +
                                 "num_outbound_cmds, is_host_login, is_guest_login , count, srv_count, serror_rate, " +
                                 "srv_serror_rate)",
