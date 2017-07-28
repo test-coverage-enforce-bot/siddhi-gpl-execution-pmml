@@ -72,8 +72,8 @@ import javax.xml.transform.Source;
 @Extension(
         name = "predict",
         namespace = "pmml",
-        description = "Processes the input stream attributes according to the defined PMML standard model and " +
-                "outputs the processed results together with the input stream attributes.",
+        description = "This extension processes the input stream attributes according to the defined PMML standard " +
+                "model and outputs the processed results together with the input stream attributes.",
         parameters = {
                 @Parameter(
                         name = "path.to.pmml.file",
