@@ -3,17 +3,17 @@
   ~ Copyright (C) 2017 WSO2 Inc. (http://wso2.com)
   ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU General Public License as published by
+  ~ it under the terms of the GNU Affero General Public License as published by
   ~ the Free Software Foundation, either version 3 of the License, or
   ~ (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
   ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  ~ GNU General Public License for more details.
+  ~ GNU Affero General Public License for more details.
   ~
-  ~ You should have received a copy of the GNU General Public License
-  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses />.
   -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
@@ -57,8 +57,8 @@
         <maven.project.plugin.version>2.9</maven.project.plugin.version>
         <joda.time.version>2.8.2.wso2v1</joda.time.version>
         <jpmml.model.version>1.1.16.wso2v1</jpmml.model.version>
-        <jpmml.manager.version>1.1.16.wso2v1</jpmml.manager.version>
-        <pmml.evaluator.version>1.1.16.wso2v1</pmml.evaluator.version>
+        <jpmml.manager.version>1.1.16.wso2v2</jpmml.manager.version>
+        <pmml.evaluator.version>1.1.16.wso2v2</pmml.evaluator.version>
         <jacoco.plugin.version>0.7.8</jacoco.plugin.version>
     </properties>
 
