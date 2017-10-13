@@ -59,7 +59,7 @@
         <jpmml.model.version>1.1.16.wso2v1</jpmml.model.version>
         <jpmml.manager.version>1.1.16.wso2v2</jpmml.manager.version>
         <pmml.evaluator.version>1.1.16.wso2v2</pmml.evaluator.version>
-        <jacoco.plugin.version>0.7.8</jacoco.plugin.version>
+        <jacoco.plugin.version>0.7.9</jacoco.plugin.version>
     </properties>
 
     <dependencyManagement>
