@@ -19,16 +19,16 @@ package org.wso2.extension.siddhi.gpl.execution.pmml;
 
 import org.apache.log4j.Logger;
 import org.dmg.pmml.FieldName;
-import org.dmg.pmml.Model;
 import org.dmg.pmml.PMML;
 import org.jpmml.evaluator.Evaluator;
 import org.jpmml.evaluator.EvaluatorUtil;
 import org.jpmml.evaluator.FieldValue;
+import org.jpmml.evaluator.InputField;
+import org.jpmml.evaluator.ModelEvaluator;
 import org.jpmml.evaluator.ModelEvaluatorFactory;
-import org.jpmml.manager.ModelManager;
-import org.jpmml.manager.PMMLManager;
-import org.jpmml.model.ImportFilter;
-import org.jpmml.model.JAXBUtil;
+import org.jpmml.evaluator.OutputField;
+import org.jpmml.evaluator.TargetField;
+import org.wso2.extension.siddhi.gpl.execution.pmml.util.PMMLUtil;
 import org.wso2.siddhi.annotation.Example;
 import org.wso2.siddhi.annotation.Extension;
 import org.wso2.siddhi.annotation.Parameter;
@@ -50,21 +50,12 @@ import org.wso2.siddhi.core.util.config.ConfigReader;
 import org.wso2.siddhi.query.api.definition.AbstractDefinition;
 import org.wso2.siddhi.query.api.definition.Attribute;
 import org.wso2.siddhi.query.api.exception.SiddhiAppValidationException;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import javax.xml.bind.JAXBException;
-import javax.xml.transform.Source;
-
-
 
 /**
  * Class implementing Pmml Model Processor.
@@ -92,12 +83,12 @@ import javax.xml.transform.Source;
                 )
         },
         returnAttributes = {
-            @ReturnAttribute(
-                    name = "output",
-                    description = "All the processed outputs defined in the query. The number of outputs can " +
-                            "vary depending on the query definition.",
-                    type = {DataType.OBJECT}
-            )
+                @ReturnAttribute(
+                        name = "output",
+                        description = "All the processed outputs defined in the query. The number of outputs can " +
+                                "vary depending on the query definition.",
+                        type = {DataType.STRING, DataType.INT, DataType.DOUBLE, DataType.FLOAT, DataType.BOOL}
+                )
         },
         examples = {
                 @Example(
@@ -119,53 +110,16 @@ public class PmmlModelProcessor extends StreamProcessor {
 
     private String pmmlDefinition;
     private boolean attributeSelectionAvailable;
-    private Map<FieldName, int[]> attributeIndexMap; // <feature-name, [event-array-type][attribute-index]> pairs
+    // <feature-name, [event-array-type][attribute-index]> pairs
+    private Map<InputField, int[]> attributeIndexMap;
 
-    private List<FieldName> inputFields;        // All the input fields defined in the pmml definition
-    private List<FieldName> outputFields;       // Output fields of the pmml definition
+    // All the input fields defined in the pmml definition
+    private List<InputField> inputFields;
+    // Output fields of the pmml definition
+    private Map<FieldName, org.dmg.pmml.DataType> outputFields = new LinkedHashMap<>();
+
+
     private Evaluator evaluator;
-
-    @Override
-    protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
-                           StreamEventCloner streamEventCloner, ComplexEventPopulater complexEventPopulater) {
-
-        StreamEvent event = streamEventChunk.getFirst();
-        Map<FieldName, FieldValue> inData = new HashMap<>();
-
-        for (Map.Entry<FieldName, int[]> entry : attributeIndexMap.entrySet()) {
-            FieldName featureName = entry.getKey();
-            int[] attributeIndexArray = entry.getValue();
-            Object dataValue = null;
-            switch (attributeIndexArray[2]) {
-                case 0:
-                    dataValue = event.getBeforeWindowData()[attributeIndexArray[3]];
-                    break;
-                case 2:
-                    dataValue = event.getOutputData()[attributeIndexArray[3]];
-                    break;
-                default:
-                    break;
-            }
-            inData.put(featureName, EvaluatorUtil.prepare(evaluator, featureName, String.valueOf(dataValue)));
-        }
-
-        if (!inData.isEmpty()) {
-            try {
-                Map<FieldName, ?> result = evaluator.evaluate(inData);
-                Object[] output = new Object[result.size()];
-                int i = 0;
-                for (Map.Entry<FieldName, ?> fieldName : result.entrySet()) {
-                    output[i] = EvaluatorUtil.decode(fieldName.getValue());
-                    i++;
-                }
-                complexEventPopulater.populateComplexEvent(event, output);
-                nextProcessor.process(streamEventChunk);
-            } catch (Exception e) {
-                logger.error("Error while predicting", e);
-                throw new SiddhiAppRuntimeException("Error while predicting", e);
-            }
-        }
-    }
 
     @Override
     protected List<Attribute> init(AbstractDefinition abstractDefinition,
@@ -186,66 +140,70 @@ public class PmmlModelProcessor extends StreamProcessor {
         }
 
         // Unmarshal the definition and get an executable pmml model
-        PMML pmmlModel = unmarshal(pmmlDefinition);
-        // Get the different types of fields defined in the pmml model
-        PMMLManager pmmlManager = new PMMLManager(pmmlModel);
+        PMML pmml = PMMLUtil.unmarshal(pmmlDefinition);
+        ModelEvaluatorFactory modelEvaluatorFactory = ModelEvaluatorFactory.newInstance();
+        ModelEvaluator<?> modelEvaluator = modelEvaluatorFactory.newModelEvaluator(pmml);
+        evaluator = (Evaluator) modelEvaluator;
 
-        ModelManager<? extends Model> modelManager = pmmlManager.getModelManager(ModelEvaluatorFactory.getInstance());
-        if (modelManager instanceof Evaluator) {
-            evaluator = (Evaluator) modelManager;
-        } else {
-            throw new SiddhiAppCreationException("Error in casting pmml model : '" + modelManager + "'");
-        }
         inputFields = evaluator.getActiveFields();
         if (evaluator.getOutputFields().size() == 0) {
-            outputFields = evaluator.getTargetFields();
+            List<TargetField> targetFields = evaluator.getTargetFields();
+            for (TargetField targetField : targetFields) {
+                outputFields.put(targetField.getName(), targetField.getDataType());
+            }
         } else {
-            outputFields = evaluator.getOutputFields();
+            List<OutputField> outputFields = evaluator.getOutputFields();
+            for (OutputField outputField : outputFields) {
+                this.outputFields.put(outputField.getName(), outputField.getDataType());
+            }
         }
 
         return generateOutputAttributes();
     }
 
+    @Override
+    protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
+                           StreamEventCloner streamEventCloner, ComplexEventPopulater complexEventPopulater) {
 
-    /**
-     * Generate the output attribute list.
-     *
-     * @return List
-     */
-    private List<Attribute> generateOutputAttributes() {
+        StreamEvent event = streamEventChunk.getFirst();
+        Map<FieldName, FieldValue> inData = new HashMap<>();
 
-        List<Attribute> outputAttributes = new ArrayList<>();
-        int numOfOutputFields = evaluator.getOutputFields().size();
-        for (FieldName field : outputFields) {
-            String dataType;
-            if (numOfOutputFields == 0) {
-                dataType = evaluator.getDataField(field).getDataType().toString();
-            } else {
-                // If dataType attribute is missing, consider dataType as string(temporary fix).
-                if (evaluator.getOutputField(field).getDataType() == null) {
-                    logger.info("Attribute dataType missing for OutputField. Using String as dataType");
-                    dataType = "string";
-                } else {
-                    dataType = evaluator.getOutputField(field).getDataType().toString();
-                }
+        for (Map.Entry<InputField, int[]> entry : attributeIndexMap.entrySet()) {
+            InputField inputField = entry.getKey();
+            int[] attributeIndexArray = entry.getValue();
+            Object dataValue = null;
+            switch (attributeIndexArray[2]) {
+                case 0:
+                    dataValue = event.getBeforeWindowData()[attributeIndexArray[3]];
+                    break;
+                case 2:
+                    dataValue = event.getOutputData()[attributeIndexArray[3]];
+                    break;
+                default:
+                    break;
             }
-            Attribute.Type type = null;
-            if (dataType.equalsIgnoreCase("double")) {
-                type = Attribute.Type.DOUBLE;
-            } else if (dataType.equalsIgnoreCase("float")) {
-                type = Attribute.Type.FLOAT;
-            } else if (dataType.equalsIgnoreCase("integer")) {
-                type = Attribute.Type.INT;
-            } else if (dataType.equalsIgnoreCase("long")) {
-                type = Attribute.Type.LONG;
-            } else if (dataType.equalsIgnoreCase("boolean")) {
-                type = Attribute.Type.BOOL;
-            } else if (dataType.equalsIgnoreCase("string")) {
-                type = Attribute.Type.STRING;
-            }
-            outputAttributes.add(new Attribute(field.getValue(), type));
+            inData.put(inputField.getName(), inputField.prepare(String.valueOf(dataValue)));
         }
-        return outputAttributes;
+
+        if (!inData.isEmpty()) {
+            try {
+                Map<FieldName, ?> result = evaluator.evaluate(inData);
+                Object[] output = new Object[outputFields.size()];
+                int i = 0;
+                for (FieldName fieldName : outputFields.keySet()) {
+                    if (result.containsKey(fieldName)) {
+                        Object value = result.get(fieldName);
+                        output[i] = EvaluatorUtil.decode(value);
+                        i++;
+                    }
+                }
+                complexEventPopulater.populateComplexEvent(event, output);
+                nextProcessor.process(streamEventChunk);
+            } catch (Exception e) {
+                logger.error("Error while predicting", e);
+                throw new SiddhiAppRuntimeException("Error while predicting", e);
+            }
+        }
     }
 
     @Override
@@ -267,10 +225,10 @@ public class PmmlModelProcessor extends StreamProcessor {
     private void populateFeatureAttributeMapping() throws Exception {
 
         attributeIndexMap = new HashMap<>();
-        HashMap<String, FieldName> features = new HashMap<>();
+        HashMap<String, InputField> features = new HashMap<>();
 
-        for (FieldName fieldName : inputFields) {
-            features.put(fieldName.getValue(), fieldName);
+        for (InputField inputField : inputFields) {
+            features.put(inputField.getName().getValue(), inputField);
         }
 
         if (attributeSelectionAvailable) {
@@ -303,31 +261,42 @@ public class PmmlModelProcessor extends StreamProcessor {
     }
 
     /**
-     * TODO : move to a Util class (PmmlUtil)
-     * Unmarshal the definition and get an executable pmml model.
+     * Generate the output attribute list.
      *
-     * @return pmml model
+     * @return List
      */
-    private PMML unmarshal(String pmmlDefinition) {
-
-        try {
-            File pmmlFile = new File(pmmlDefinition);
-            InputSource pmmlSource;
-            Source source;
-            // if the given is a file path, read the pmml definition from the file
-            if (pmmlFile.isFile() && pmmlFile.canRead()) {
-                pmmlSource = new InputSource(new FileInputStream(pmmlFile));
-            } else {
-                // else, read from the given definition
-                pmmlSource = new InputSource(new StringReader(pmmlDefinition));
+    private List<Attribute> generateOutputAttributes() {
+        List<Attribute> outputAttributes = new ArrayList<>();
+        for (Map.Entry<FieldName, org.dmg.pmml.DataType> entry : outputFields.entrySet()) {
+            FieldName fieldName = entry.getKey();
+            org.dmg.pmml.DataType dataType = entry.getValue();
+            if (dataType == null) {
+                dataType = org.dmg.pmml.DataType.STRING;
             }
-            source = ImportFilter.apply(pmmlSource);
-            return JAXBUtil.unmarshalPMML(source);
-        } catch (SAXException | JAXBException | FileNotFoundException e) {
-            logger.error("Failed to unmarshal the pmml definition: " + e.getMessage());
-            throw new SiddhiAppCreationException("Failed to unmarshal the pmml definition: " + pmmlDefinition + ". "
-                    + e.getMessage(), e);
+            outputAttributes.add(new Attribute(fieldName.getValue(), mapOutputAttributes(dataType)));
         }
+        return outputAttributes;
+    }
+
+    /**
+     * Map the model output fields to Siddhi Attributes.
+     *
+     * @return Attribute.Type
+     */
+    private Attribute.Type mapOutputAttributes(org.dmg.pmml.DataType dataType) {
+        Attribute.Type type = null;
+        if (dataType.equals(org.dmg.pmml.DataType.DOUBLE)) {
+            type = Attribute.Type.DOUBLE;
+        } else if (dataType.equals(org.dmg.pmml.DataType.FLOAT)) {
+            type = Attribute.Type.FLOAT;
+        } else if (dataType.equals(org.dmg.pmml.DataType.INTEGER)) {
+            type = Attribute.Type.INT;
+        } else if (dataType.equals(org.dmg.pmml.DataType.BOOLEAN)) {
+            type = Attribute.Type.BOOL;
+        } else if (dataType.equals(org.dmg.pmml.DataType.STRING)) {
+            type = Attribute.Type.STRING;
+        }
+        return type;
     }
 
     @Override

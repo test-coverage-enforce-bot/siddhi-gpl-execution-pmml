@@ -45,24 +45,8 @@
             <artifactId>siddhi-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.wso2.orbit.org.jpmml</groupId>
-            <artifactId>pmml-model</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.orbit.org.jpmml</groupId>
-            <artifactId>pmml-manager</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.orbit.org.jpmml</groupId>
-            <artifactId>pmml-schema</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.orbit.org.jpmml</groupId>
+            <groupId>org.jpmml</groupId>
             <artifactId>pmml-evaluator</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.orbit.joda-time</groupId>
-            <artifactId>joda-time</artifactId>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
@@ -153,10 +137,6 @@
                             org.wso2.extension.siddhi.gpl.execution.pmml.*
                         </Export-Package>
                         <Import-Package>
-                            org.jpmml.evaluator.*; version="${pmml.evaluator.version}",
-                            org.jpmml.manager.*; version="${pmml.evaluator.version}",
-                            org.jpmml.model.*; version="${pmml.evaluator.version}",
-                            org.jpmml.schema.*; version="${pmml.evaluator.version}",
                             *;resolution:=optional
                         </Import-Package>
                         <Include-Resource>
