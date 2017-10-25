@@ -20,7 +20,6 @@ package org.wso2.extension.siddhi.gpl.execution.pmml;
 import org.apache.log4j.Logger;
 import org.dmg.pmml.FieldName;
 import org.dmg.pmml.PMML;
-
 import org.jpmml.evaluator.Evaluator;
 import org.jpmml.evaluator.EvaluatorUtil;
 import org.jpmml.evaluator.FieldValue;
@@ -126,7 +125,6 @@ public class PmmlModelProcessor extends StreamProcessor {
     protected List<Attribute> init(AbstractDefinition abstractDefinition,
                                    ExpressionExecutor[] expressionExecutors,
                                    ConfigReader configReader, SiddhiAppContext siddhiAppContext) {
-
         if (attributeExpressionExecutors.length == 0) {
             throw new SiddhiAppValidationException("PMML model definition not available.");
         } else {
@@ -142,7 +140,7 @@ public class PmmlModelProcessor extends StreamProcessor {
         }
 
         // Unmarshal the definition and get an executable pmml model
-        PMML pmml =  PMMLUtil.unmarshal(pmmlDefinition);
+        PMML pmml = PMMLUtil.unmarshal(pmmlDefinition);
 
         ModelEvaluatorFactory modelEvaluatorFactory = ModelEvaluatorFactory.newInstance();
 
@@ -151,7 +149,6 @@ public class PmmlModelProcessor extends StreamProcessor {
         evaluator = (Evaluator) modelEvaluator;
 
         inputFields = evaluator.getActiveFields();
-
         if (evaluator.getOutputFields().size() == 0) {
             List<TargetField> targetFields = evaluator.getTargetFields();
             for (TargetField targetField : targetFields) {
@@ -304,7 +301,6 @@ public class PmmlModelProcessor extends StreamProcessor {
         }
         return type;
     }
-
 
     @Override
     public void stop() {
