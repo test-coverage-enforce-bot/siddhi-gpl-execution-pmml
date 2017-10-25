@@ -87,7 +87,7 @@ import java.util.Map;
                         name = "output",
                         description = "All the processed outputs defined in the query. The number of outputs can " +
                                 "vary depending on the query definition.",
-                        type = {DataType.OBJECT}
+                        type = {DataType.STRING, DataType.INT, DataType.DOUBLE, DataType.FLOAT, DataType.BOOL}
                 )
         },
         examples = {

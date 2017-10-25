@@ -48,7 +48,7 @@ pmml:predict(<STRING> path.to.pmml.file, <STRING> input)
     <tr>
         <td style="vertical-align: top">output</td>
         <td style="vertical-align: top; word-wrap: break-word">All the processed outputs defined in the query. The number of outputs can vary depending on the query definition.</td>
-        <td style="vertical-align: top">OBJECT</td>
+        <td style="vertical-align: top">STRING<br>INT<br>DOUBLE<br>FLOAT<br>BOOL</td>
     </tr>
 </table>
 
