@@ -79,7 +79,7 @@ public class PMMLModelProcessorTestCase {
                 eventArrived = true;
                 if (inEvents != null) {
                     eventCount.getAndIncrement();
-                    isSuccessfullyExecuted = inEvents[0].getData(13).equals("1");
+                    isSuccessfullyExecuted = inEvents[0].getData(13).equals("1.0");
                 }
             }
 
@@ -88,6 +88,47 @@ public class PMMLModelProcessorTestCase {
         InputHandler inputHandler = siddhiAppRuntime.getInputHandler("InputStream");
         siddhiAppRuntime.start();
         inputHandler.send(new Object[]{6, 148, 72, 35, 0, 33.6, 0.627, 50, 1, 2, 3, 4, 5});
+        SiddhiTestHelper.waitForEvents(waitTime, 1, eventCount, timeout);
+        Assert.assertTrue(isSuccessfullyExecuted);
+        Assert.assertTrue(eventArrived);
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test
+    public void predictXGBoostTest() throws InterruptedException, URISyntaxException {
+
+        URL resource = PMMLModelProcessorTestCase.class.getResource("/iris_xgb.pmml");
+        String pmmlFile = new File(resource.toURI()).getAbsolutePath();
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inputStream = "define stream InputStream " +
+                "(Sepal_Length double, Sepal_Width double, Petal_Length double, Petal_Width double );";
+
+        String query = "@info(name = 'query1') " +
+                "from InputStream#pmml:predict('" + pmmlFile + "', Sepal_Length, Sepal_Width , Petal_Length, " +
+                "Petal_Width) " +
+                "select probability_virginica " +
+                "insert into outputStream ;";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inputStream + query);
+
+        siddhiAppRuntime.addCallback("query1", new QueryCallback() {
+            @Override
+            public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+                EventPrinter.print(timeStamp, inEvents, removeEvents);
+                eventArrived = true;
+                if (inEvents != null) {
+                    eventCount.getAndIncrement();
+                    isSuccessfullyExecuted = inEvents[0].getData(0).equals(0.8975975f);
+                }
+            }
+
+        });
+
+        InputHandler inputHandler = siddhiAppRuntime.getInputHandler("InputStream");
+        siddhiAppRuntime.start();
+        inputHandler.send(new Object[]{6, 148, 72, 35});
         SiddhiTestHelper.waitForEvents(waitTime, 1, eventCount, timeout);
         Assert.assertTrue(isSuccessfullyExecuted);
         Assert.assertTrue(eventArrived);
@@ -122,7 +163,7 @@ public class PMMLModelProcessorTestCase {
                 EventPrinter.print(timeStamp, inEvents, removeEvents);
                 eventArrived = true;
                 if (inEvents != null) {
-                    isSuccessfullyExecuted = inEvents[0].getData(0).equals("1");
+                    isSuccessfullyExecuted = inEvents[0].getData(0).equals("1.0");
                 }
             }
 
@@ -165,7 +206,7 @@ public class PMMLModelProcessorTestCase {
                 EventPrinter.print(timeStamp, inEvents, removeEvents);
                 eventArrived = true;
                 if (inEvents != null) {
-                    isSuccessfullyExecuted = inEvents[0].getData(13).equals("1");
+                    isSuccessfullyExecuted = inEvents[0].getData(13).equals("1.0");
                 }
             }
 
@@ -208,7 +249,7 @@ public class PMMLModelProcessorTestCase {
                 EventPrinter.print(timeStamp, inEvents, removeEvents);
                 eventArrived = true;
                 if (inEvents != null) {
-                    isSuccessfullyExecuted = inEvents[0].getData(13).equals("1");
+                    isSuccessfullyExecuted = inEvents[0].getData(13).equals(1.0);
                 }
             }
 
