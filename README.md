@@ -12,7 +12,7 @@ Find some useful links below:
 
 ## Latest API Docs 
 
-Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/siddhi-gpl-execution-pmml/api/4.0.4">4.0.4</a>.
+Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/siddhi-gpl-execution-pmml/api/4.0.5">4.0.5</a>.
 
 ## How to use 
 
