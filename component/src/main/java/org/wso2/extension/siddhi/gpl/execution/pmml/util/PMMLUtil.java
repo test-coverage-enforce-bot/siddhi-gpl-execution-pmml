@@ -27,7 +27,7 @@ public class PMMLUtil {
      *
      * @return pmml model
      */
-    public static PMML unmarshal(String pmmlDefinition) throws FileNotFoundException {
+    public static PMML unmarshal(String pmmlDefinition) {
 
         try {
             File pmmlFile = new File(pmmlDefinition);
