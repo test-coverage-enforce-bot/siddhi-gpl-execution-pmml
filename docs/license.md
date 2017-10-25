@@ -15,7 +15,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ```
-                -------------------------------------------------------------------------
+-------------------------------------------------------------------------
                 
                                     GNU AFFERO GENERAL PUBLIC LICENSE
                                        Version 3, 19 November 2007
@@ -679,4 +679,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                 For more information on this, and how to apply and follow the GNU AGPL, see
                 <http://www.gnu.org/licenses/>.
                  
-                ----------------------------------------------------------------------------
+----------------------------------------------------------------------------
