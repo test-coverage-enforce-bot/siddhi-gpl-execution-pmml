@@ -141,11 +141,8 @@ public class PmmlModelProcessor extends StreamProcessor {
 
         // Unmarshal the definition and get an executable pmml model
         PMML pmml = PMMLUtil.unmarshal(pmmlDefinition);
-
         ModelEvaluatorFactory modelEvaluatorFactory = ModelEvaluatorFactory.newInstance();
-
         ModelEvaluator<?> modelEvaluator = modelEvaluatorFactory.newModelEvaluator(pmml);
-
         evaluator = (Evaluator) modelEvaluator;
 
         inputFields = evaluator.getActiveFields();

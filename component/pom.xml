@@ -137,8 +137,6 @@
                             org.wso2.extension.siddhi.gpl.execution.pmml.*
                         </Export-Package>
                         <Import-Package>
-                            org.jpmml.*,
-                            org.dmg.pmml.*,
                             *;resolution:=optional
                         </Import-Package>
                         <Include-Resource>
