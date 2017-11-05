@@ -24,6 +24,7 @@ import org.jpmml.evaluator.Evaluator;
 import org.jpmml.evaluator.EvaluatorUtil;
 import org.jpmml.evaluator.FieldValue;
 import org.jpmml.evaluator.InputField;
+import org.jpmml.evaluator.InvalidResultException;
 import org.jpmml.evaluator.ModelEvaluator;
 import org.jpmml.evaluator.ModelEvaluatorFactory;
 import org.jpmml.evaluator.OutputField;
@@ -182,7 +183,12 @@ public class PmmlModelProcessor extends StreamProcessor {
                 default:
                     break;
             }
-            inData.put(inputField.getName(), inputField.prepare(String.valueOf(dataValue)));
+            try {
+                inData.put(inputField.getName(), inputField.prepare(String.valueOf(dataValue)));
+            } catch (InvalidResultException e) {
+                logger.error(String.format("Incompatible value for field: %s. Prediction might be erroneous.",
+                        inputField.getName()));
+            }
         }
 
         if (!inData.isEmpty()) {
