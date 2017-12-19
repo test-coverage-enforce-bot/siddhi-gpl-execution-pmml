@@ -12,7 +12,7 @@ Find some useful links below:
 
 ## Latest API Docs 
 
-Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/siddhi-gpl-execution-pmml/api/4.0.10">4.0.10</a>.
+Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/siddhi-gpl-execution-pmml/api/4.0.11">4.0.11</a>.
 
 ## How to use 
 
@@ -46,7 +46,7 @@ Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/si
 
 ## Features
 
-* <a target="_blank" href="https://wso2-extensions.github.io/siddhi-gpl-execution-pmml/api/4.0.10/#predict-stream-processor">predict</a> *(<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#stream-processor">(Stream Processor)</a>)*<br><div style="padding-left: 1em;"><p>This extension processes the input stream attributes according to the defined PMML standard model and outputs the processed results together with the input stream attributes.</p></div>
+* <a target="_blank" href="https://wso2-extensions.github.io/siddhi-gpl-execution-pmml/api/4.0.11/#predict-stream-processor">predict</a> *(<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#stream-processor">(Stream Processor)</a>)*<br><div style="padding-left: 1em;"><p>This extension processes the input stream attributes according to the defined PMML standard model and outputs the processed results together with the input stream attributes.</p></div>
 
 ## How to Contribute
  
