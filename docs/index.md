@@ -12,7 +12,7 @@ Find some useful links below:
 
 ## Latest API Docs 
 
-Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/siddhi-gpl-execution-pmml/api/4.0.12">4.0.12</a>.
+Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/siddhi-gpl-execution-pmml/api/4.0.13">4.0.13</a>.
 
 ## How to use 
 
@@ -20,7 +20,7 @@ Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/si
 
 * You can use this extension in the latest <a target="_blank" href="https://github.com/wso2/product-sp/releases">WSO2 Stream Processor</a> that is a part of <a target="_blank" href="http://wso2.com/analytics?utm_source=gitanalytics&utm_campaign=gitanalytics_Jul17">WSO2 Analytics</a> offering, with editor, debugger and simulation support. 
 
-* You can use  this extension after copying the component <a target="_blank" href="https://github.com/wso2-extensions/siddhi-gpl-execution-pmml/releases">jar</a> to the `<STREAM_PROCESSOR_HOME>/lib` directory.
+* You can use  this extension after copying the component <a target="_blank" href="http://central.maven.org/maven2/org/wso2/extension/siddhi/gpl/execution/pmml/siddhi-gpl-execution-pmml/">jar</a> to the `<STREAM_PROCESSOR_HOME>/lib` directory.
 
 **Using the extension as a <a target="_blank" href="https://wso2.github.io/siddhi/documentation/running-as-a-java-library">java library</a>**
 
@@ -46,7 +46,7 @@ Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/si
 
 ## Features
 
-* <a target="_blank" href="https://wso2-extensions.github.io/siddhi-gpl-execution-pmml/api/4.0.12/#predict-stream-processor">predict</a> *(<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#stream-processor">(Stream Processor)</a>)*<br><div style="padding-left: 1em;"><p>This extension processes the input stream attributes according to the defined PMML standard model and outputs the processed results together with the input stream attributes.</p></div>
+* <a target="_blank" href="https://wso2-extensions.github.io/siddhi-gpl-execution-pmml/api/4.0.13/#predict-stream-processor">predict</a> *(<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#stream-processor">(Stream Processor)</a>)*<br><div style="padding-left: 1em;"><p>This extension processes the input stream attributes according to the defined PMML standard model and outputs the processed results together with the input stream attributes.</p></div>
 
 ## How to Contribute
  
